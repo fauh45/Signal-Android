@@ -66,6 +66,7 @@ import org.thoughtcrime.securesms.service.LocalBackupListener;
 import org.thoughtcrime.securesms.service.RotateSenderCertificateListener;
 import org.thoughtcrime.securesms.service.RotateSignedPreKeyListener;
 import org.thoughtcrime.securesms.service.UpdateApkRefreshListener;
+import org.thoughtcrime.securesms.service.sentiment.SentimentService;
 import org.thoughtcrime.securesms.storage.StorageSyncHelper;
 import org.thoughtcrime.securesms.util.AppForegroundObserver;
 import org.thoughtcrime.securesms.util.AppStartup;
@@ -98,6 +99,7 @@ public class ApplicationContext extends MultiDexApplication implements AppForegr
   private ExpiringMessageManager expiringMessageManager;
   private ViewOnceMessageManager viewOnceMessageManager;
   private PersistentLogger       persistentLogger;
+  private SentimentService       sentimentService;
 
   public static ApplicationContext getInstance(Context context) {
     return (ApplicationContext)context.getApplicationContext();
@@ -152,6 +154,7 @@ public class ApplicationContext extends MultiDexApplication implements AppForegr
                             .addNonBlocking(this::initializePendingMessages)
                             .addNonBlocking(this::initializeCleanup)
                             .addNonBlocking(this::initializeGlideCodecs)
+                            .addNonBlocking(this::initializeSentimentService)
                             .addNonBlocking(FeatureFlags::init)
                             .addNonBlocking(RefreshPreKeysJob::scheduleIfNecessary)
                             .addNonBlocking(StorageSyncHelper::scheduleRoutineSync)
@@ -214,6 +217,14 @@ public class ApplicationContext extends MultiDexApplication implements AppForegr
       Log.w(TAG, "Build expired!");
       SignalStore.misc().markClientDeprecated();
     }
+  }
+
+  private void initializeSentimentService() {
+    this.sentimentService = new SentimentService(this);
+  }
+
+  public SentimentService getSentimentService() {
+    return sentimentService;
   }
 
   private void initializeSecurityProvider() {

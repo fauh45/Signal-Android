@@ -26,6 +26,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Build;
 import android.text.Annotation;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -52,6 +53,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.DimenRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
@@ -59,6 +61,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.annimon.stream.Stream;
 
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.BindableConversationItem;
 import org.thoughtcrime.securesms.ConfirmIdentityDialog;
 import org.thoughtcrime.securesms.MediaPreviewActivity;
@@ -107,6 +110,7 @@ import org.thoughtcrime.securesms.recipients.RecipientForeverObserver;
 import org.thoughtcrime.securesms.recipients.RecipientId;
 import org.thoughtcrime.securesms.revealable.ViewOnceMessageView;
 import org.thoughtcrime.securesms.revealable.ViewOnceUtil;
+import org.thoughtcrime.securesms.service.sentiment.SentimentService;
 import org.thoughtcrime.securesms.stickers.StickerUrl;
 import org.thoughtcrime.securesms.util.DateUtils;
 import org.thoughtcrime.securesms.util.DynamicTheme;
@@ -249,6 +253,7 @@ public final class ConversationItem extends RelativeLayout implements BindableCo
   }
 
   @Override
+  @RequiresApi(api = Build.VERSION_CODES.N)
   public void bind(@NonNull LifecycleOwner lifecycleOwner,
                    @NonNull ConversationMessage conversationMessage,
                    @NonNull Optional<MessageRecord> previousMessageRecord,
@@ -283,7 +288,7 @@ public final class ConversationItem extends RelativeLayout implements BindableCo
     setMessageShape(messageRecord, previousMessageRecord, nextMessageRecord, groupThread);
     setMediaAttributes(messageRecord, previousMessageRecord, nextMessageRecord, groupThread, hasWallpaper, isMessageRequestAccepted);
     setBodyText(messageRecord, searchQuery, isMessageRequestAccepted);
-    setBubbleState(messageRecord, hasWallpaper);
+    // setBubbleState(messageRecord, hasWallpaper);
     setInteractionState(conversationMessage, pulse);
     setStatusIcons(messageRecord, hasWallpaper);
     setContactPhoto(recipient.get());
@@ -294,6 +299,7 @@ public final class ConversationItem extends RelativeLayout implements BindableCo
     setMessageSpacing(context, messageRecord, previousMessageRecord, nextMessageRecord, groupThread);
     setReactions(messageRecord);
     setFooter(messageRecord, nextMessageRecord, locale, groupThread, hasWallpaper);
+    setBodyBubble(messageRecord);
   }
 
   @Override
@@ -372,7 +378,7 @@ public final class ConversationItem extends RelativeLayout implements BindableCo
 
   @Override
   public void onRecipientChanged(@NonNull Recipient modified) {
-    setBubbleState(messageRecord, modified.hasWallpaper());
+    // setBubbleState(messageRecord, modified.hasWallpaper());
     if (recipient.getId().equals(modified.getId())) {
       setContactPhoto(modified);
       setGroupMessageStatus(messageRecord, modified);
@@ -419,6 +425,11 @@ public final class ConversationItem extends RelativeLayout implements BindableCo
   }
 
   /// MessageRecord Attribute Parsers
+
+  @RequiresApi(api = Build.VERSION_CODES.N)
+  private void setBodyBubble(MessageRecord messageRecord) {
+    ApplicationContext.getInstance(context).getSentimentService().setColorBasedOnSentiment(messageRecord.getBody(), this.bodyBubble);
+  }
 
   private void setBubbleState(MessageRecord messageRecord, boolean hasWallpaper) {
     if (messageRecord.isOutgoing() && !messageRecord.isRemoteDelete()) {

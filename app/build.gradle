@@ -429,6 +429,8 @@ dependencies {
     }
     implementation 'dnsjava:dnsjava:2.1.9'
 
+    compile 'com.detectlanguage:detectlanguage:1.1.0'
+
     flipperImplementation 'com.facebook.flipper:flipper:0.32.2'
     flipperImplementation 'com.facebook.soloader:soloader:0.8.2'
 
